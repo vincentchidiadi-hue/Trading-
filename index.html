@@ -1,1 +1,935 @@
 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vankleff Solana Hunter</title>
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #121826;
+    --surface-2: #1a2236;
+    --border: #243049;
+    --text: #e6edf7;
+    --muted: #8a98b5;
+    --green: #16c784;
+    --red: #ea3943;
+    --amber: #f0b90b;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app { max-width: 1200px; margin: 0 auto; padding: 16px; }
+
+  /* Header */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+    padding: 16px 18px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800; color: #fff;
+  }
+  .brand h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  .brand p { font-size: 12px; color: var(--muted); }
+  .mode-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+  }
+  .mode-paper { background: rgba(22,199,132,0.12); color: var(--green); border: 1px solid rgba(22,199,132,0.3); }
+  .mode-live { background: rgba(234,57,67,0.12); color: var(--red); border: 1px solid rgba(234,57,67,0.3); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .dot.live { animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 4px; margin-bottom: 16px; overflow-x: auto;
+    padding: 4px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .tab {
+    padding: 10px 16px; border: none; background: transparent; color: var(--muted);
+    font-size: 14px; font-weight: 500; cursor: pointer; border-radius: 8px;
+    white-space: nowrap; transition: all 0.15s;
+  }
+  .tab.active { background: var(--surface-2); color: var(--text); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  /* Cards */
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 768px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px;
+  }
+  .card h3 {
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; padding: 10px 12px; color: var(--muted);
+    font-weight: 500; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.4px; border-bottom: 1px solid var(--border);
+  }
+  td { padding: 12px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  .token-cell { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .token-icon { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+
+  /* Forms */
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 10px 12px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+    font-size: 14px; font-family: inherit;
+  }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--blue); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+  /* Buttons */
+  .btn {
+    padding: 10px 18px; border: none; border-radius: 8px; font-size: 14px;
+    font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: inherit;
+  }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { background: #d63338; }
+  .btn-ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--border); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Status pills */
+  .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .pill-green { background: rgba(22,199,132,0.12); color: var(--green); }
+  .pill-red { background: rgba(234,57,67,0.12); color: var(--red); }
+  .pill-amber { background: rgba(240,185,11,0.12); color: var(--amber); }
+  .pill-muted { background: var(--surface-2); color: var(--muted); }
+
+  /* Toggle */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; inset: 0; background: var(--border);
+    border-radius: 999px; transition: 0.2s;
+  }
+  .slider:before {
+    content: ""; position: absolute; height: 18px; width: 18px; left: 3px; top: 3px;
+    background: #fff; border-radius: 50%; transition: 0.2s;
+  }
+  .toggle input:checked + .slider { background: var(--green); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); }
+
+  /* Alert banner */
+  .alert {
+    padding: 12px 16px; border-radius: var(--radius); margin-bottom: 16px;
+    font-size: 13px; display: flex; align-items: center; gap: 10px;
+  }
+  .alert-warn { background: rgba(240,185,11,0.08); border: 1px solid rgba(240,185,11,0.25); color: var(--amber); }
+  .alert-info { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.25); color: var(--blue); }
+
+  .hidden { display: none !important; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+  .mono { font-family: "SF Mono", "Monaco", monospace; }
+  .mb-0 { margin-bottom: 0; }
+  .mt-12 { margin-top: 12px; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .health-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+  .health-row:last-child { border-bottom: none; }
+  .footer { text-align: center; padding: 24px 0; color: var(--muted); font-size: 12px; }
+  .disclaimer { background: rgba(234,57,67,0.05); border: 1px solid rgba(234,57,67,0.2); border-radius: var(--radius); padding: 14px; margin-bottom: 16px; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="logo">V</div>
+      <div>
+        <h1>Vankleff Solana Hunter</h1>
+        <p>Automated meme-coin trading — Paper Trading Active</p>
+      </div>
+    </div>
+    <div class="mode-badge mode-paper" id="modeBadge">
+      <span class="dot live"></span>
+      <span id="modeText">PAPER TRADING</span>
+    </div>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="disclaimer">
+    ⚠️ <strong>Risk Warning:</strong> No trading strategy guarantees profits. Losses may exceed planned triggers due to slippage, liquidity shortages, failed transactions, and execution delays. Live trading is disabled until explicitly authorized.
+  </div>
+
+  <!-- Alert banner (risk limit) -->
+  <div class="alert alert-warn hidden" id="riskAlert">
+    <span>⛔</span>
+    <span id="riskAlertText"></span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="dashboard">Dashboard</button>
+    <button class="tab" data-tab="positions">Positions</button>
+    <button class="tab" data-tab="history">Trade History</button>
+    <button class="tab" data-tab="scanners">Scanners</button>
+    <button class="tab" data-tab="settings">Settings</button>
+    <button class="tab" data-tab="config">Integrations</button>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <div class="tab-content" id="tab-dashboard">
+    <div class="grid grid-4" style="margin-bottom:16px">
+      <div class="card">
+        <div class="stat-label">Paper Wallet Balance</div>
+        <div class="stat-value mono" id="paperBalance">₦0</div>
+        <div class="stat-sub" id="paperSol">0 SOL (simulated)</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">Actual Wallet Balance</div>
+        <div class="stat-value mono muted" id="actualBalance">—</div>
+        <div class="stat-sub">Live trading disabled</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">Available Trading Funds</div>
+        <div class="stat-value mono" id="availableFunds">₦0</div>
+        <div class="stat-sub" id="exposureText">Exposure: ₦0 / ₦3,000</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">Total P&L (Simulated)</div>
+        <div class="stat-value mono" id="totalPnl">₦0</div>
+        <div class="stat-sub" id="pnlPercent">0% return</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Open Positions <span class="pill pill-muted" id="positionCount">0</span></h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Token</th><th>Entry</th><th>Current</th><th>P&L</th><th>SL/TP</th></tr>
+            </thead>
+            <tbody id="positionsBody">
+              <tr><td colspan="5" class="muted" style="text-align:center;padding:24px">No open positions</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Risk Limit Status</h3>
+        <div id="riskStatus">
+          <div class="health-row"><span class="muted">Daily Loss Limit</span><span id="dailyLossStatus" class="pill pill-green">OK</span></div>
+          <div class="health-row"><span class="muted">Portfolio Drawdown</span><span id="drawdownStatus" class="pill pill-green">OK</span></div>
+          <div class="health-row"><span class="muted">Max Positions</span><span id="maxPosStatus" class="pill pill-green">OK</span></div>
+          <div class="health-row"><span class="muted">Max Exposure</span><span id="maxExpStatus" class="pill pill-green">OK</span></div>
+          <div class="health-row"><span class="muted">Emergency Stop</span><span id="emergencyStatus" class="pill pill-green">Inactive</span></div>
+        </div>
+        <div class="mt-12">
+          <button class="btn btn-danger" id="emergencyBtn" style="width:100%">ACTIVATE EMERGENCY STOP</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Service Health</h3>
+      <div class="grid grid-2">
+        <div>
+          <div class="health-row"><span class="muted">RPC Connection</span><span class="pill pill-amber">Not Configured</span></div>
+          <div class="health-row"><span class="muted">WebSocket Feed</span><span class="pill pill-amber">Not Configured</span></div>
+          <div class="health-row"><span class="muted">Telegram Bot</span><span class="pill pill-amber">Not Configured</span></div>
+        </div>
+        <div>
+          <div class="health-row"><span class="muted">Early Hunter Scanner</span><span class="pill pill-muted">Idle</span></div>
+          <div class="health-row"><span class="muted">Confirmation Hunter</span><span class="pill pill-muted">Idle</span></div>
+          <div class="health-row"><span class="muted">Last Scanner Run</span><span class="small muted">Never</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSITIONS TAB -->
+  <div class="tab-content hidden" id="tab-positions">
+    <div class="card">
+      <h3>Open Positions</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Token</th><th>Strategy</th><th>Size</th><th>Entry Price</th><th>Current Price</th><th>Unrealized P&L</th><th>Stop Loss</th><th>Take Profit</th><th>Security</th><th>Action</th></tr>
+          </thead>
+          <tbody id="positionsFullBody">
+            <tr><td colspan="10" class="muted" style="text-align:center;padding:24px">No open positions</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div class="tab-content hidden" id="tab-history">
+    <div class="card">
+      <h3>Trade History (Simulated)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Time</th><th>Token</th><th>Strategy</th><th>Type</th><th>Size</th><th>Entry</th><th>Exit</th><th>Fees</th><th>Net P&L</th><th>Status</th></tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="10" class="muted" style="text-align:center;padding:24px">No trades yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCANNERS TAB -->
+  <div class="tab-content hidden" id="tab-scanners">
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Early Hunter <span class="pill pill-muted">Stage 3</span></h3>
+        <p class="small muted mb-0">Discovers newly launched tokens (pair age &lt; 6h).</p>
+        <div class="mt-12">
+          <div class="health-row"><span class="muted">Pair Age</span><span class="small">&lt; 6 hours</span></div>
+          <div class="health-row"><span class="muted">Liquidity</span><span class="small">$10K – $250K</span></div>
+          <div class="health-row"><span class="muted">Market Cap</span><span class="small">$50K – $1M</span></div>
+          <div class="health-row"><span class="muted">Volume</span><span class="small">&gt; $100K</span></div>
+        </div>
+        <p class="small muted mt-12">⚠️ Scanner requires RPC configuration. No live data until configured.</p>
+      </div>
+      <div class="card">
+        <h3>Confirmation Hunter <span class="pill pill-muted">Stage 3</span></h3>
+        <p class="small muted mb-0">Confirms tokens with established activity (pair age &lt; 24h).</p>
+        <div class="mt-12">
+          <div class="health-row"><span class="muted">Pair Age</span><span class="small">&lt; 24 hours</span></div>
+          <div class="health-row"><span class="muted">Liquidity</span><span class="small">$25K – $500K</span></div>
+          <div class="health-row"><span class="muted">Market Cap</span><span class="small">$100K – $2M</span></div>
+          <div class="health-row"><span class="muted">Volume</span><span class="small">&gt; $250K</span></div>
+        </div>
+        <p class="small muted mt-12">⚠️ Scanner requires RPC configuration. No live data until configured.</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>Discovered Tokens</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Token</th><th>Source</th><th>Discovered</th><th>Score</th><th>Security</th><th>Status</th></tr></thead>
+          <tbody id="discoveredBody">
+            <tr><td colspan="6" class="muted" style="text-align:center;padding:24px">No tokens discovered yet — scanner not configured</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div class="tab-content hidden" id="tab-settings">
+    <div class="card">
+      <h3>Trading Configuration</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Total Budget (₦)</label>
+          <input type="number" id="cfgBudget" value="50000" />
+        </div>
+        <div class="form-group">
+          <label>Loss Trigger Per Trade (₦)</label>
+          <input type="number" id="cfgLossTrigger" value="500" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Initial Position Size (₦)</label>
+          <input type="number" id="cfgPositionSize" value="1000" />
+        </div>
+        <div class="form-group">
+          <label>Max Simultaneous Positions</label>
+          <input type="number" id="cfgMaxPositions" value="3" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Max Combined Exposure (₦)</label>
+          <input type="number" id="cfgMaxExposure" value="3000" />
+        </div>
+        <div class="form-group">
+          <label>Portfolio Drawdown Trigger (₦)</label>
+          <input type="number" id="cfgDrawdown" value="2500" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Daily Loss Limit (₦) — Test A/B/C</label>
+          <select id="cfgDailyLimit">
+            <option value="1000">₦1,000 (Test A)</option>
+            <option value="2000">₦2,000 (Test B)</option>
+            <option value="3000">₦3,000 (Test C)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>SOL/NGN Rate (simulated)</label>
+          <input type="number" id="cfgSolRate" value="180000" step="1000" />
+        </div>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div style="font-weight:600">Leverage & Borrowing</div>
+          <div class="small muted">Prohibited — always disabled</div>
+        </div>
+        <label class="toggle"><input type="checkbox" disabled /><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div style="font-weight:600">Auto-Reinvest Profits</div>
+          <div class="small muted">Disabled by default</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="cfgReinvest" /><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div style="font-weight:600">Loss Recovery Position Increase</div>
+          <div class="small muted">Prohibited — always disabled</div>
+        </div>
+        <label class="toggle"><input type="checkbox" disabled /><span class="slider"></span></label>
+      </div>
+      <button class="btn btn-primary mt-12" id="saveSettings">Save Settings</button>
+      <span class="small muted" id="saveMsg" style="margin-left:12px"></span>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Daily Loss-Limit Experiment</h3>
+      <p class="small muted mb-0">Stage 5 will test ₦1,000 / ₦2,000 / ₦3,000 limits with consistent entry signals and comparable periods. No future data will influence historical simulations. Results reported before recommending a live limit.</p>
+      <div class="grid grid-3 mt-12" style="margin-top:12px">
+        <div style="padding:12px;background:var(--surface-2);border-radius:8px">
+          <div class="small muted">Test A</div>
+          <div style="font-size:20px;font-weight:700">₦1,000</div>
+          <div class="small muted">Most conservative</div>
+        </div>
+        <div style="padding:12px;background:var(--surface-2);border-radius:8px">
+          <div class="small muted">Test B</div>
+          <div style="font-size:20px;font-weight:700">₦2,000</div>
+          <div class="small muted">Moderate</div>
+        </div>
+        <div style="padding:12px;background:var(--surface-2);border-radius:8px">
+          <div class="small muted">Test C</div>
+          <div style="font-size:20px;font-weight:700">₦3,000</div>
+          <div class="small muted">Least conservative</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTEGRATIONS TAB -->
+  <div class="tab-content hidden" id="tab-config">
+    <div class="alert alert-info">
+      <span>🔒</span>
+      <span>These credentials will be configured later via secure server-side secrets. Do not enter real values yet. Placeholder template only.</span>
+    </div>
+    <div class="card">
+      <h3>Secure Configuration Template (Placeholders Only)</h3>
+      <div class="form-group">
+        <label>RPC_HTTPS_URL</label>
+        <input type="text" placeholder="https://mainnet.helius.dev/PLACEHOLDER_API_KEY" readonly />
+      </div>
+      <div class="form-group">
+        <label>RPC_WSS_URL</label>
+        <input type="text" placeholder="wss://mainnet.helius.dev/?api-key=PLACEHOLDER_API_KEY" readonly />
+      </div>
+      <div class="form-group">
+        <label>WALLET_PRIVATE_KEY</label>
+        <input type="password" placeholder="PLACEHOLDER — never hardcode or expose in frontend" readonly />
+      </div>
+      <div class="form-group">
+        <label>TELEGRAM_BOT_TOKEN</label>
+        <input type="text" placeholder="123456789:PLACEHOLDER_BOT_TOKEN" readonly />
+      </div>
+      <div class="form-group">
+        <label>TELEGRAM_CHAT_ID</label>
+        <input type="text" placeholder="PLACEHOLDER_CHAT_ID" readonly />
+      </div>
+      <p class="small muted mt-12">⚠️ <strong>Platform Limitation:</strong> Base44 scheduled tasks do not provide real-time monitoring. Continuous execution, WebSocket subscriptions, and secure automated transaction signing require an external backend or Linux VPS. Live trading remains disabled until that infrastructure is configured and tested.</p>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>Wallet Security</h3>
+      <div class="health-row"><span class="muted">Wallet Type</span><span class="small">Phantom (existing) → Dedicated trading wallet recommended</span></div>
+      <div class="health-row"><span class="muted">Recovery Phrase</span><span class="small" style="color:var(--red)">Never requested</span></div>
+      <div class="health-row"><span class="muted">Private Key Exposure</span><span class="small" style="color:var(--red)">Never exposed to frontend, scanners, Telegram, or logs</span></div>
+      <div class="health-row"><span class="muted">Automated Signing</span><span class="small" style="color:var(--amber)">Requires external signing service</span></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Vankleff Solana Hunter — Stage 1: Application Structure &amp; Dashboard<br/>
+    Paper Trading Mode Active · Live Trading Disabled · No strategy guarantees profits
+  </div>
+</div>
+
+<script>
+(function() {
+  "use strict";
+
+  // ---- State management with localStorage persistence ----
+  var STORAGE_KEY = "vankleff_state_v1";
+
+  var DEFAULT_STATE = {
+    mode: "paper",
+    liveEnabled: false,
+    emergencyStop: false,
+    settings: {
+      budget: 50000,
+      lossTrigger: 500,
+      positionSize: 1000,
+      maxPositions: 3,
+      maxExposure: 3000,
+      drawdownTrigger: 2500,
+      dailyLossLimit: 1000,
+      solNgnRate: 180000,
+      reinvest: false
+    },
+    paperBalance: 50000,
+    positions: [],
+    tradeHistory: [],
+    discoveredTokens: [],
+    dailyLossUsed: 0,
+    dailyLossDate: new Date().toISOString().slice(0, 10),
+    realizedPnl: 0
+  };
+
+  function loadState() {
+    try {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        var parsed = JSON.parse(saved);
+        return Object.assign({}, DEFAULT_STATE, parsed, {
+          settings: Object.assign({}, DEFAULT_STATE.settings, parsed.settings || {})
+        });
+      }
+    } catch (e) { console.warn("State load failed", e); }
+    return JSON.parse(JSON.stringify(DEFAULT_STATE));
+  }
+
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch (e) { console.warn("State save failed", e); }
+  }
+
+  var state = loadState();
+
+  // ---- Helpers ----
+  function fmt(naira) {
+    return "\u20A6" + Number(naira || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 });
+  }
+  function fmtSol(sol) {
+    return Number(sol || 0).toFixed(4) + " SOL";
+  }
+  function ngnToSol(naira) {
+    return naira / state.settings.solNgnRate;
+  }
+  function pnlClass(val) {
+    return val > 0 ? "pos" : val < 0 ? "neg" : "";
+  }
+  function timeAgo(iso) {
+    var diff = Date.now() - new Date(iso).getTime();
+    var mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return mins + "m ago";
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + "h ago";
+    return Math.floor(hrs / 24) + "d ago";
+  }
+
+  // ---- Daily loss reset check ----
+  function checkDailyReset() {
+    var today = new Date().toISOString().slice(0, 10);
+    if (state.dailyLossDate !== today) {
+      state.dailyLossDate = today;
+      state.dailyLossUsed = 0;
+    }
+  }
+
+  // ---- Risk checks ----
+  function getExposure() {
+    return state.positions.reduce(function(sum, p) { return sum + p.sizeNaira; }, 0);
+  }
+
+  function getUnrealizedPnl() {
+    return 0; // no live price feed in Stage 1
+  }
+
+  function riskStatus() {
+    var s = state.settings;
+    var dailyLimitHit = state.dailyLossUsed >= s.dailyLossLimit;
+    var drawdownHit = Math.abs(state.realizedPnl) >= s.drawdownTrigger && state.realizedPnl < 0;
+    var maxPosHit = state.positions.length >= s.maxPositions;
+    var expHit = getExposure() >= s.maxExposure;
+    return { dailyLimitHit: dailyLimitHit, drawdownHit: drawdownHit, maxPosHit: maxPosHit, expHit: expHit };
+  }
+
+  function anyRiskBlock() {
+    var r = riskStatus();
+    return r.dailyLimitHit || r.drawdownHit || state.emergencyStop;
+  }
+
+  // ---- Rendering ----
+  function render() {
+    checkDailyReset();
+    var s = state.settings;
+
+    // Mode badge
+    var badge = document.getElementById("modeBadge");
+    var modeText = document.getElementById("modeText");
+    if (state.emergencyStop) {
+      badge.className = "mode-badge mode-live";
+      modeText.textContent = "EMERGENCY STOP";
+    } else if (state.mode === "live" && state.liveEnabled) {
+      badge.className = "mode-badge mode-live";
+      modeText.textContent = "LIVE TRADING";
+    } else {
+      badge.className = "mode-badge mode-paper";
+      modeText.textContent = "PAPER TRADING";
+    }
+
+    // Balances
+    document.getElementById("paperBalance").textContent = fmt(state.paperBalance);
+    document.getElementById("paperSol").textContent = fmtSol(ngnToSol(state.paperBalance)) + " (simulated)";
+    document.getElementById("actualBalance").textContent = "\u2014";
+    var available = state.paperBalance - getExposure();
+    document.getElementById("availableFunds").textContent = fmt(Math.max(0, available));
+    document.getElementById("exposureText").textContent = "Exposure: " + fmt(getExposure()) + " / " + fmt(s.maxExposure);
+
+    // Total P&L
+    var totalPnl = state.realizedPnl + getUnrealizedPnl();
+    var pnlEl = document.getElementById("totalPnl");
+    if (totalPnl < 0) pnlEl.textContent = "-" + fmt(Math.abs(totalPnl));
+    else pnlEl.textContent = "+" + fmt(totalPnl);
+    pnlEl.className = "stat-value mono " + pnlClass(totalPnl);
+    var pct = s.budget > 0 ? (totalPnl / s.budget * 100) : 0;
+    document.getElementById("pnlPercent").textContent = (pct >= 0 ? "+" : "") + pct.toFixed(1) + "% return";
+
+    // Position count
+    document.getElementById("positionCount").textContent = state.positions.length;
+
+    // Positions table (dashboard)
+    var pb = document.getElementById("positionsBody");
+    if (state.positions.length === 0) {
+      pb.innerHTML = '<tr><td colspan="5" class="muted" style="text-align:center;padding:24px">No open positions</td></tr>';
+    } else {
+      pb.innerHTML = state.positions.map(function(p) {
+        var pnl = 0;
+        return '<tr>' +
+          '<td class="token-cell"><span class="token-icon">' + p.symbol.slice(0, 2) + '</span>' + p.symbol + '</td>' +
+          '<td class="mono small">' + fmt(p.sizeNaira) + '</td>' +
+          '<td class="mono small muted">\u2014</td>' +
+          '<td class="mono small ' + pnlClass(pnl) + '">' + (pnl >= 0 ? "+" : "") + fmt(Math.abs(pnl)) + '</td>' +
+          '<td class="small mono">' + fmt(p.stopLoss) + ' / ' + fmt(p.takeProfit) + '</td>' +
+        '</tr>';
+      }).join("");
+    }
+
+    // Positions full table
+    var pfb = document.getElementById("positionsFullBody");
+    if (state.positions.length === 0) {
+      pfb.innerHTML = '<tr><td colspan="10" class="muted" style="text-align:center;padding:24px">No open positions</td></tr>';
+    } else {
+      pfb.innerHTML = state.positions.map(function(p) {
+        return '<tr>' +
+          '<td class="token-cell"><span class="token-icon">' + p.symbol.slice(0, 2) + '</span>' + p.symbol + '</td>' +
+          '<td><span class="pill pill-muted">' + p.strategy + '</span></td>' +
+          '<td class="mono">' + fmt(p.sizeNaira) + '</td>' +
+          '<td class="mono small">' + p.entryPrice.toFixed(8) + '</td>' +
+          '<td class="mono small muted">\u2014</td>' +
+          '<td class="mono small muted">\u2014</td>' +
+          '<td class="mono small">' + fmt(p.stopLoss) + '</td>' +
+          '<td class="mono small">' + fmt(p.takeProfit) + '</td>' +
+          '<td><span class="pill ' + (p.securityPassed ? "pill-green" : "pill-red") + '">' + (p.securityPassed ? "Passed" : "Failed") + '</span></td>' +
+          '<td><button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="vankleff.closePosition(\'' + p.id + '\')">Close</button></td>' +
+        '</tr>';
+      }).join("");
+    }
+
+    // Trade history
+    var hb = document.getElementById("historyBody");
+    if (state.tradeHistory.length === 0) {
+      hb.innerHTML = '<tr><td colspan="10" class="muted" style="text-align:center;padding:24px">No trades yet</td></tr>';
+    } else {
+      hb.innerHTML = state.tradeHistory.slice().reverse().map(function(t) {
+        return '<tr>' +
+          '<td class="small">' + new Date(t.timestamp).toLocaleString() + '</td>' +
+          '<td class="token-cell">' + t.symbol + '</td>' +
+          '<td><span class="pill pill-muted">' + t.strategy + '</span></td>' +
+          '<td>' + (t.type === "buy" ? '<span style="color:var(--green)">Buy</span>' : '<span style="color:var(--red)">Sell</span>') + '</td>' +
+          '<td class="mono small">' + fmt(t.sizeNaira) + '</td>' +
+          '<td class="mono small">' + t.entryPrice.toFixed(8) + '</td>' +
+          '<td class="mono small">' + (t.exitPrice ? t.exitPrice.toFixed(8) : "\u2014") + '</td>' +
+          '<td class="mono small">' + fmt(t.fees) + '</td>' +
+          '<td class="mono small ' + pnlClass(t.netPnl) + '">' + (t.netPnl >= 0 ? "+" : "") + fmt(Math.abs(t.netPnl)) + '</td>' +
+          '<td><span class="pill ' + (t.simulated ? "pill-amber" : "pill-green") + '">' + (t.simulated ? "Simulated" : "Live") + '</span></td>' +
+        '</tr>';
+      }).join("");
+    }
+
+    // Discovered tokens
+    var db = document.getElementById("discoveredBody");
+    if (state.discoveredTokens.length === 0) {
+      db.innerHTML = '<tr><td colspan="6" class="muted" style="text-align:center;padding:24px">No tokens discovered yet \u2014 scanner not configured</td></tr>';
+    } else {
+      db.innerHTML = state.discoveredTokens.slice().reverse().map(function(t) {
+        return '<tr>' +
+          '<td class="token-cell">' + t.symbol + '</td>' +
+          '<td class="small">' + t.source + '</td>' +
+          '<td class="small">' + timeAgo(t.discoveredAt) + '</td>' +
+          '<td class="mono">' + (t.score || "\u2014") + '</td>' +
+          '<td><span class="pill ' + (t.securityPassed ? "pill-green" : "pill-red") + '">' + (t.securityPassed ? "Passed" : "Failed") + '</span></td>' +
+          '<td class="small">' + t.status + '</td>' +
+        '</tr>';
+      }).join("");
+    }
+
+    // Risk status
+    var r = riskStatus();
+    var dls = document.getElementById("dailyLossStatus");
+    dls.className = "pill " + (r.dailyLimitHit ? "pill-red" : "pill-green");
+    dls.textContent = r.dailyLimitHit ? "LIMIT HIT" : fmt(state.dailyLossUsed) + " / " + fmt(s.dailyLossLimit);
+    var dds = document.getElementById("drawdownStatus");
+    dds.className = "pill " + (r.drawdownHit ? "pill-red" : "pill-green");
+    dds.textContent = r.drawdownHit ? "TRIGGERED" : fmt(Math.abs(Math.min(0, state.realizedPnl))) + " / " + fmt(s.drawdownTrigger);
+    var mps = document.getElementById("maxPosStatus");
+    mps.className = "pill " + (r.maxPosHit ? "pill-amber" : "pill-green");
+    mps.textContent = state.positions.length + " / " + s.maxPositions;
+    var mes = document.getElementById("maxExpStatus");
+    mes.className = "pill " + (r.expHit ? "pill-amber" : "pill-green");
+    mes.textContent = fmt(getExposure()) + " / " + fmt(s.maxExposure);
+    var es = document.getElementById("emergencyStatus");
+    es.className = "pill " + (state.emergencyStop ? "pill-red" : "pill-green");
+    es.textContent = state.emergencyStop ? "ACTIVE" : "Inactive";
+
+    // Emergency button
+    var eBtn = document.getElementById("emergencyBtn");
+    if (state.emergencyStop) {
+      eBtn.textContent = "RESET EMERGENCY STOP";
+      eBtn.className = "btn btn-ghost";
+    } else {
+      eBtn.textContent = "ACTIVATE EMERGENCY STOP";
+      eBtn.className = "btn btn-danger";
+    }
+
+    // Risk alert banner
+    var alertEl = document.getElementById("riskAlert");
+    var alertText = document.getElementById("riskAlertText");
+    if (state.emergencyStop) {
+      alertEl.classList.remove("hidden");
+      alertText.textContent = "EMERGENCY STOP ACTIVE \u2014 New entries blocked. Existing positions managed per exit policy. Reset required to resume.";
+    } else if (r.dailyLimitHit) {
+      alertEl.classList.remove("hidden");
+      alertText.textContent = "Daily loss limit reached (" + fmt(s.dailyLossLimit) + ") \u2014 New purchases blocked. Existing positions continue per risk policy.";
+    } else if (r.drawdownHit) {
+      alertEl.classList.remove("hidden");
+      alertText.textContent = "Portfolio drawdown trigger reached (" + fmt(s.drawdownTrigger) + ") \u2014 New purchases blocked. Reset or next trading period required.";
+    } else {
+      alertEl.classList.add("hidden");
+    }
+
+    // Settings form
+    document.getElementById("cfgBudget").value = s.budget;
+    document.getElementById("cfgLossTrigger").value = s.lossTrigger;
+    document.getElementById("cfgPositionSize").value = s.positionSize;
+    document.getElementById("cfgMaxPositions").value = s.maxPositions;
+    document.getElementById("cfgMaxExposure").value = s.maxExposure;
+    document.getElementById("cfgDrawdown").value = s.drawdownTrigger;
+    document.getElementById("cfgDailyLimit").value = s.dailyLossLimit;
+    document.getElementById("cfgSolRate").value = s.solNgnRate;
+    document.getElementById("cfgReinvest").checked = s.reinvest;
+  }
+
+  // ---- Tab switching ----
+  document.getElementById("tabs").addEventListener("click", function(e) {
+    if (e.target.classList.contains("tab")) {
+      var tabs = document.querySelectorAll(".tab");
+      for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
+      e.target.classList.add("active");
+      var contents = document.querySelectorAll(".tab-content");
+      for (var j = 0; j < contents.length; j++) contents[j].classList.add("hidden");
+      document.getElementById("tab-" + e.target.dataset.tab).classList.remove("hidden");
+    }
+  });
+
+  // ---- Settings save ----
+  document.getElementById("saveSettings").addEventListener("click", function() {
+    state.settings.budget = Number(document.getElementById("cfgBudget").value) || 50000;
+    state.settings.lossTrigger = Number(document.getElementById("cfgLossTrigger").value) || 500;
+    state.settings.positionSize = Number(document.getElementById("cfgPositionSize").value) || 1000;
+    state.settings.maxPositions = Number(document.getElementById("cfgMaxPositions").value) || 3;
+    state.settings.maxExposure = Number(document.getElementById("cfgMaxExposure").value) || 3000;
+    state.settings.drawdownTrigger = Number(document.getElementById("cfgDrawdown").value) || 2500;
+    state.settings.dailyLossLimit = Number(document.getElementById("cfgDailyLimit").value) || 1000;
+    state.settings.solNgnRate = Number(document.getElementById("cfgSolRate").value) || 180000;
+    state.settings.reinvest = document.getElementById("cfgReinvest").checked;
+    saveState();
+    render();
+    var msg = document.getElementById("saveMsg");
+    msg.textContent = "\u2713 Saved";
+    setTimeout(function() { msg.textContent = ""; }, 2000);
+  });
+
+  // ---- Emergency stop ----
+  document.getElementById("emergencyBtn").addEventListener("click", function() {
+    if (state.emergencyStop) {
+      if (confirm("Reset emergency stop? This will allow new entries again (subject to risk limits).")) {
+        state.emergencyStop = false;
+      }
+    } else {
+      if (confirm("ACTIVATE EMERGENCY STOP?\n\n\u2022 New entries will be blocked\n\u2022 Pending operations reconciled\n\u2022 Existing positions continue monitoring\n\u2022 Owner will be notified\n\nThis does NOT close open positions.")) {
+        state.emergencyStop = true;
+        state.tradeHistory.push({
+          timestamp: new Date().toISOString(),
+          symbol: "SYSTEM",
+          strategy: "\u2014",
+          type: "emergency_stop",
+          sizeNaira: 0,
+          entryPrice: 0,
+          exitPrice: null,
+          fees: 0,
+          netPnl: 0,
+          simulated: true,
+          event: "Emergency stop activated"
+        });
+      }
+    }
+    saveState();
+    render();
+  });
+
+  // ---- Paper trading: close position (manual) ----
+  function closePosition(id) {
+    var pos = null;
+    for (var i = 0; i < state.positions.length; i++) {
+      if (state.positions[i].id === id) { pos = state.positions[i]; break; }
+    }
+    if (!pos) return;
+    var fees = pos.sizeNaira * 0.01;
+    var netPnl = -fees;
+    state.paperBalance += pos.sizeNaira - fees;
+    state.realizedPnl += netPnl;
+    state.dailyLossUsed += Math.abs(Math.min(0, netPnl));
+    state.tradeHistory.push({
+      timestamp: new Date().toISOString(),
+      symbol: pos.symbol,
+      strategy: pos.strategy,
+      type: "sell",
+      sizeNaira: pos.sizeNaira,
+      entryPrice: pos.entryPrice,
+      exitPrice: pos.entryPrice,
+      fees: fees,
+      netPnl: netPnl,
+      simulated: true
+    });
+    state.positions = state.positions.filter(function(p) { return p.id !== id; });
+    saveState();
+    render();
+  }
+
+  // ---- Paper trading: simulate buy (for testing) ----
+  function simulateBuy(symbol, strategy) {
+    if (anyRiskBlock()) {
+      alert("Entry blocked by risk controls. Check risk limit status.");
+      return;
+    }
+    var s = state.settings;
+    if (state.positions.length >= s.maxPositions) {
+      alert("Max simultaneous positions reached (" + s.maxPositions + ").");
+      return;
+    }
+    if (getExposure() + s.positionSize > s.maxExposure) {
+      alert("Max combined exposure would be exceeded (" + fmt(s.maxExposure) + ").");
+      return;
+    }
+    if (state.paperBalance < s.positionSize) {
+      alert("Insufficient paper balance.");
+      return;
+    }
+    var pos = {
+      id: "pos_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+      symbol: symbol || ("TEST" + Math.floor(Math.random() * 1000)),
+      strategy: strategy || "early_hunter",
+      sizeNaira: s.positionSize,
+      entryPrice: 0.000001 * (Math.random() * 100 + 1),
+      stopLoss: s.lossTrigger,
+      takeProfit: s.positionSize * 2,
+      securityPassed: true,
+      openedAt: new Date().toISOString()
+    };
+    state.paperBalance -= s.positionSize;
+    state.positions.push(pos);
+    state.tradeHistory.push({
+      timestamp: new Date().toISOString(),
+      symbol: pos.symbol,
+      strategy: pos.strategy,
+      type: "buy",
+      sizeNaira: s.positionSize,
+      entryPrice: pos.entryPrice,
+      exitPrice: null,
+      fees: s.positionSize * 0.005,
+      netPnl: 0,
+      simulated: true
+    });
+    saveState();
+    render();
+  }
+
+  // ---- Expose for inline handlers ----
+  window.vankleff = {
+    closePosition: closePosition,
+    simulateBuy: simulateBuy,
+    getState: function() { return state; }
+  };
+
+  // ---- Initial render ----
+  render();
+
+  // ---- Check daily reset every minute ----
+  setInterval(function() {
+    checkDailyReset();
+    saveState();
+    render();
+  }, 60000);
+
+})();
+</script>
+</body>
+</html>
